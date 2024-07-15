@@ -1,0 +1,87 @@
+
+
+.gLogoActions {
+    height: 35px;
+    vertical-align: middle;
+    position:relative; 
+    top: -4px;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+#syncContacts:hover .fa-arrows-rotate {
+    animation: spin 1s infinite;
+}
+
+#searchContact {
+    width: 18%;
+    border: 1px solid #ccc;
+    border-radius: 40px; 
+    font-size: 1rem; 
+    outline: none; 
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out; 
+    
+}
+
+#searchContact:hover,
+#searchContact:focus {
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+
+#createContact:hover .fa-solid.fa-plus {
+    animation: pulse 0.5s infinite;
+}
+
+.alert {
+    word-wrap: break-word; 
+}
+
+
+.table td, .table th {
+    padding: 12px 15px; 
+    vertical-align: middle; 
+}
+
+.form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    background-color: #f0f0f0; 
+    border-color: #ccc;
+}
+.form-check-label {
+    font-size: 1rem;
+    margin-left: 0.5em;
+    margin-right: 1rem;
+    color: #333; 
+}
+
+#chevronIcon {
+    transition: transform 0.3s ease; 
+  }
+
+#chevronIcon.collapsed {
+transform: rotate(180deg); 
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(180deg); }
+}
+
