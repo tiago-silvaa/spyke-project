@@ -13,7 +13,6 @@ function fetchContacts () {
                     toggleSync(event.target, syncFilter);
                 });
             });
-             
         })
 }
 
@@ -65,7 +64,7 @@ function displayContacts(contacts, noContactsMessage = 'You have no contacts in 
                 </td>
                 <td class="text-center">
                     <div class="dropdown dropend" style="text-center">
-                        <button class="btn btn-outline-secondary rounded-circle btn-sm" type="button" id="dropdownMenuButton-${contact.id}" data-bs-toggle="dropdown" aria-expanded="false">
+                        <button class="btn btn-outline-dark rounded-circle btn-sm" type="button" id="dropdownMenuButton-${contact.id}" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-three-dots-vertical"></i>
                         </button>
                         <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton-${contact.id}">
@@ -100,8 +99,47 @@ document.addEventListener('DOMContentLoaded', () => {
             const filterOption = this.value;
             if (filterOption === 'all') {
                 fetchContacts();
+                Swal.fire({
+                    position: 'top-start',
+                    icon: 'success',
+                    title: 'Contacts filter set <strong>off</strong>',
+                    toast: true,
+                    showConfirmButton: false,
+                    timer: 1350,
+                    timerProgressBar: true,
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOut animate__faster'
+                    }
+                });
             } else {
                 fetchContactsBySync(filterOption);
+                if (filterOption === "on") {
+                    Swal.fire({
+                        position: 'top-start',
+                        icon: 'success',
+                        title: 'Filtered by the option <strong>Sync On</strong>',
+                        toast: true,
+                        showConfirmButton: false,
+                        timer: 1350,
+                        timerProgressBar: true,
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOut animate__faster'
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        position: 'top-start',
+                        icon: 'success',
+                        title: 'Filtered by the option <strong>Sync Off</strong>',
+                        toast: true,
+                        showConfirmButton: false,
+                        timer: 1350,
+                        timerProgressBar: true,
+                        hideClass: {
+                            popup: 'animate__animated animate__fadeOut animate__faster'
+                        }
+                    });
+                }
             }
         });
     });

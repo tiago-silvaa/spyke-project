@@ -5,6 +5,7 @@ const session = require('express-session');
 const path = require('path');
 const { google } = require('googleapis');
 const { OAuth2Client } = require('google-auth-library');
+require('dotenv').config();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -18,8 +19,8 @@ app.use(session({
 }));
 
 const oauth2Client = new OAuth2Client(
-    '598714146091-an8se45oeoigp3m3jvuc6mdrujaup3t8.apps.googleusercontent.com',
-    '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',
+    process.env.GOOGLE_CLIENT_ID,
+    process.env.GOOGLE_CLIENT_SECRET,
     'http://localhost:3000/google/callback'
 );
 
@@ -34,6 +35,7 @@ function isAuthenticated(req, res, next) {
 
 function isGoogleAuthenticated(req, res, next) {
     if (req.session.tokens) {
+        oauth2Client.setCredentials(req.session.tokens);
         return next();
     } else {
         res.redirect('/auth/google');
@@ -50,15 +52,64 @@ app.get('/isGoogleAuthenticated', (req, res) => {
 
 //-------=---------------===--------------=-----------Endpoints-----------=---------===------------------=----------------
 
+
+//------------------Autenticação com google--------------
+
+const SCOPES = ['https://www.googleapis.com/auth/contacts'];
+
+//Enviar utilizador para pedido de autenticação com Google
+app.get('/auth/google', isAuthenticated, async(req, res) => {
+    const authUrl = oauth2Client.generateAuthUrl({
+        access_type: 'offline',
+        scope: SCOPES
+    });
+    res.redirect(authUrl);
+});
+
+//Obter código de autorização, autorizar e atribuir token à sessão
+app.get('/google/callback', isAuthenticated, async(req, res) => {
+
+    const { code } = req.query; 
+    const { tokens } = await oauth2Client.getToken(code); 
+
+    if (tokens.refresh_token) {
+        req.session.refresh_token = tokens.refresh_token;
+    }
+
+    req.session.tokens = tokens;
+    oauth2Client.setCredentials(tokens);
+    res.redirect('/spyke');
+
+});
+
+async function refreshAccessToken(req, res, next) {
+    if (!oauth2Client.credentials || !oauth2Client.credentials.expiry_date || oauth2Client.credentials.expiry_date <= Date.now()) {
+        if (req.session.refresh_token) {
+            try {
+                const newTokens = await oauth2Client.refreshToken(req.session.refresh_token);
+                oauth2Client.setCredentials(newTokens.tokens);
+                req.session.tokens = newTokens.tokens;
+            } catch (err) {
+                return res.redirect('/auth/google');
+            }
+        } else {
+            return res.redirect('/auth/google');
+        }
+    }
+    next();
+}
+
+//-----------------------------Login, Registo, Logout--------------------
+
 //-------Home Page para login e registo------
 app.get('/', async(req, res) => {
     res.render('home');
-})
+});
 
 //--------Renderizar página Registo---------
 app.get('/register', async(req, res) => {
     res.render('register');
-})
+});
 
 //----------Endpoint para efetuar registo--------
 app.post('/auth/register', async(req, res) => {
@@ -74,12 +125,12 @@ app.post('/auth/register', async(req, res) => {
         req.session.message = { type: 'danger', content: 'Invalid credentials, please try again.' };
         res.json(req.session.message);
     }
-})
+});
 
 //------------Renderizar página de login----------
 app.get('/login', async(req, res) => {
     res.render('login');
-})
+});
 
 //----------Endpoint para fazer login na app------
 app.post('/auth/login', async(req, res) => {
@@ -96,43 +147,18 @@ app.post('/auth/login', async(req, res) => {
         req.session.user = { id: userData[0].id, username };
         res.json(req.session.message);
     }
-})
+});
 
 //---------Logout-------------
 app.post('/auth/logout', async(req, res) => {
     req.session.destroy();
     res.json({ message: 'User logged out!'});
-})
-
-
-
-
-//------------------Autenticação com google--------------
-
-const SCOPES = ['https://www.googleapis.com/auth/contacts'];
-
-//Enviar utilizador para pedido de autenticação com Google
-app.get('/auth/google', isAuthenticated, async(req, res) => {
-    const authUrl = oauth2Client.generateAuthUrl({
-        access_type: 'offline',
-        scope: SCOPES
-    });
-    res.redirect(authUrl);
-})
-
-//Obter código de autorização, autorizar e atribuir token à sessão
-app.get('/google/callback', isAuthenticated, async(req, res) => {
-
-    const { code } = req.query; 
-    const { tokens } = await oauth2Client.getToken(code); 
-    req.session.tokens = tokens;
-    res.redirect('/spyke');
-
 });
+
+
 //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 //               Endpoints de contactos
-
 
 //  1   -   Endpoint para renderizar página de contactos
 
@@ -146,7 +172,7 @@ app.get('/spyke', isAuthenticated, async(req, res) => {
         console.error('Erro ao buscar contatos:', error);
         res.status(500).send('Erro ao buscar contatos.');
     }
-})
+});
 
 //  2   -   Fetch dos contactos da base de dados em json
 
@@ -159,11 +185,11 @@ app.get('/contactsData', isAuthenticated, async(req, res) => {
         console.error('Erro ao buscar contatos:', error);
         res.status(500).send('Erro ao buscar contatos.');
     }
-})
+});
 
 //  3   -   Fetch contactos do google em formato json
 
-app.get('/googleContactsData', isAuthenticated, isGoogleAuthenticated, async(req, res) => {
+app.get('/googleContactsData', refreshAccessToken, isAuthenticated, isGoogleAuthenticated, async(req, res) => {
 
     oauth2Client.setCredentials(req.session.tokens);
     const contactsApi = google.people({ version: 'v1', auth: oauth2Client });
@@ -175,11 +201,11 @@ app.get('/googleContactsData', isAuthenticated, isGoogleAuthenticated, async(req
     });
     const contacts = response.data.connections;
     res.json(contacts);
-})
+});
 
 //  4   -   Importar os contactos do google e meter na app
 
-app.get('/importGoogleContacts', isAuthenticated, isGoogleAuthenticated, async(req, res) => {
+app.get('/importGoogleContacts', refreshAccessToken, isAuthenticated, isGoogleAuthenticated, async(req, res) => {
 
     const userId = req.session.user.id;
 
@@ -208,7 +234,7 @@ app.get('/importGoogleContacts', isAuthenticated, isGoogleAuthenticated, async(r
 
     res.json({ message: 'Google contacts successfully imported to your Spyke!', contacts: contacts, totalContacts: contacts.length });
 
-})
+});
 
 //  5   -   Adicionar contactos
 
@@ -252,7 +278,7 @@ app.post('/addContact', isAuthenticated, async(req, res) => {
         message = 'Contact added and synchronized with Google Contacts!';
     }
     res.json({ message, contacts: contacts, totalContacts: contacts.length });
-})
+});
 
 function delay(ms) {
     return new Promise(function(resolve) {
@@ -264,7 +290,7 @@ const delayTime = 700;
 
 //  6   -   Sincronizar contactos com google
 
-app.post('/syncContacts', isAuthenticated, isGoogleAuthenticated, async(req, res) => {
+app.post('/syncContacts', isAuthenticated, isGoogleAuthenticated, refreshAccessToken, async(req, res) => {
 
     const userId = req.session.user.id;
 
@@ -328,7 +354,7 @@ app.post('/syncContacts', isAuthenticated, isGoogleAuthenticated, async(req, res
 
 //  7   -   Sincronizar aquando da configuração do google account
 
-app.post('/syncContacts/googleConfig', isAuthenticated, isGoogleAuthenticated, async(req, res) => {
+app.post('/syncContacts/googleConfig', isAuthenticated, isGoogleAuthenticated, refreshAccessToken, async(req, res) => {
 
     const userId = req.session.user.id;
 
@@ -451,7 +477,7 @@ app.post('/contacts/:id/deactivateSync', isAuthenticated, async(req, res) => {
 
 })
 
-app.post('/contacts/:id/sync', isAuthenticated, isGoogleAuthenticated, async(req, res) => {
+app.post('/contacts/:id/sync', isAuthenticated, isGoogleAuthenticated, refreshAccessToken, async(req, res) => {
 
     const contactId = req.params.id;
     const [contactResult] = await db.query('SELECT * FROM contacts WHERE id = ?', [contactId]);

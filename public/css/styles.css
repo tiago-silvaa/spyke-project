@@ -13,7 +13,7 @@
 }
 
 #syncContacts:hover .fa-arrows-rotate {
-    animation: spin 1s infinite;
+    animation: spin 1s linear infinite;
 }
 
 #searchContact {
@@ -83,5 +83,26 @@ transform: rotate(180deg);
 @keyframes rotate {
     from { transform: rotate(0deg); }
     to { transform: rotate(180deg); }
+}
+
+.rotate-animation {
+    animation: rotate 0.3s linear forwards;
+}
+
+@keyframes rotate-back {
+    from { transform: rotate(180deg); }
+    to { transform: rotate(0deg); }
+}
+
+.rotate-animation-back {
+    animation: rotate-back 0.3s linear forwards;
+}
+
+.growHover {
+    transition: transform 0.3s ease;
+}
+
+.growHover:hover {
+    transform: scale(1.1);
 }
 
