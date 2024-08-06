@@ -28,11 +28,17 @@ CREATE TABLE `contacts` (
   `name` varchar(255) DEFAULT NULL,
   `phone` varchar(255) DEFAULT NULL,
   `email` varchar(255) DEFAULT NULL,
-  `syncGoogle` tinyint(1) NOT NULL DEFAULT '0',
+  `syncGoogle` tinyint(1) NOT NULL DEFAULT '1',
+  `jobTitle` varchar(255) DEFAULT NULL,
+  `company` varchar(255) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `website` varchar(255) DEFAULT NULL,
+  `birthday` date DEFAULT NULL,
+  `notes` text,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `contacts_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2710 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4704 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +47,7 @@ CREATE TABLE `contacts` (
 
 LOCK TABLES `contacts` WRITE;
 /*!40000 ALTER TABLE `contacts` DISABLE KEYS */;
-INSERT INTO `contacts` VALUES (2706,1,'adadadad','123214','',1),(2707,1,'daddadadad','1234144','',1),(2708,1,'testetetetet','124144414','',0),(2709,1,'trtrtrtrttrtrt','41241412414','',0);
+INSERT INTO `contacts` VALUES (4702,1,'Pessoa 1','','',0,'','','','',NULL,''),(4703,1,'Pessoa 2','','',0,'','','','',NULL,'');
 /*!40000 ALTER TABLE `contacts` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -81,4 +87,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-07-15  9:02:56
+-- Dump completed on 2024-07-30  9:49:44
